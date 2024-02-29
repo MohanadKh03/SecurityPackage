@@ -10,7 +10,7 @@ namespace SecurityLibrary
     {
         public string Encrypt(string plainText, int key)
         {
-            return "";
+            return "aaaaaaa";
         }
 
         public string Decrypt(string cipherText, int key)
