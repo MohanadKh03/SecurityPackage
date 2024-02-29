@@ -10,7 +10,7 @@ namespace SecurityLibrary
     {
         public string Encrypt(string plainText, int key)
         {
-            throw new NotImplementedException();
+            return "";
         }
 
         public string Decrypt(string cipherText, int key)
