@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,7 +34,40 @@ namespace SecurityLibrary
 
         public List<int> Encrypt(List<int> plainText, List<int> key)
         {
-            throw new NotImplementedException();
+            int plainTxtSize = plainText.Count;
+            int keySize = key.Count;
+            List<int> cipherTxt = new List<int> ();
+            
+            int count = 0;
+            int index = 0;
+            int n = plainTxtSize;
+
+            int m =(int) Math.Sqrt(keySize);
+            while (n > 0)
+            {
+                List <int> v = new List <int> ();
+                for (int i = 0; i < m; i++)
+                {
+                    v.Add(plainText[count]);
+                    count++;
+                }
+                // matrix element multiply
+                for (int i = 0; i < m; i++)
+                {
+                    int k = 0;
+                    int res = 0;
+                    for (int j = 0; j < m; j++)
+                    {
+                        res += key[i * m + j] * v[k];
+                        k++;
+                    }
+                    cipherTxt.Add(res % 26);
+                    index++;
+                }
+                n-=m;
+            }
+
+            return cipherTxt;
         }
 
         public string Encrypt(string plainText, string key)
