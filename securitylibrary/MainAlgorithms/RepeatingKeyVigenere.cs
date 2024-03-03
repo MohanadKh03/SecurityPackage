@@ -61,31 +61,18 @@ namespace SecurityLibrary
 
         public string Analyse(string plainText, string cipherText)
         {
-            /*StringBuilder key = new StringBuilder("");
+            StringBuilder key = new StringBuilder("");
             for (int i = 0; i < plainText.Length; i++)
             {
                 KeyValuePair<char, char> keyValue = new KeyValuePair<char, char>(char.ToLower(plainText[i]), char.ToLower(cipherText[i]));
                 key.Append(decryptingDictionary[keyValue]);
+                string temp = key.ToString();
+                string returnedCipher = Encrypt(plainText, temp);
+                if (returnedCipher.ToUpper().Equals(cipherText))
+                    return key.ToString();
             }
-            int ctr = 0;
-            int start = -1;
-            bool flag = false;
-            for (int i = 0; i < plainText.Length; i++)
-            {
-                if (key[i] != key[ctr])
-                    flag = false;
-                else
-                    start = i;
-                while (i < plainText.Length && key[i] == key[ctr])
-                {
-                    ctr++;
-                    i++;
-                    flag = true;
-                }
-            }
-            if (flag)
-                key = key.Remove(start, key.Length - start);
-            return key.ToString();*/
+
+            return null;
             throw new NotImplementedException();
         }
 
