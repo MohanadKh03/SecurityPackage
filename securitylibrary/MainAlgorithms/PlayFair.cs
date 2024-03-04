@@ -17,7 +17,7 @@ namespace SecurityLibrary
         public string Analyse(string plainText)
         {
             throw new NotImplementedException();
-            
+
         }
 
         public string Analyse(string plainText, string cipherText)
@@ -205,13 +205,14 @@ namespace SecurityLibrary
             return output_string;
         }
 
-         static int Mod(int a, int b)
-         {
-             return (a % b + b) % b;
-         }
+        static int Mod(int a, int b)
+        {
+            return (a % b + b) % b;
+        }
 
         static string playfair_Decipher(string key, string encryptedText)
         {
+
             string alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             key = key.ToUpper();
             key = key.Replace(" ", "");
@@ -280,45 +281,76 @@ namespace SecurityLibrary
                 }
             }
 
-            //int counter = 0;
+            int counter = 0;
             foreach (string x in arr)
             {
                 string first = "";
                 string second = "";
                 first += x[0];
                 second += x[1];
-                /*if (second.Equals ("X"))
-                {
-                    counter++;
-                }*/
+
                 int r1, r2, c1, c2;
                 r1 = coordinates[first].Item1;
                 c1 = coordinates[first].Item2;
                 r2 = coordinates[second].Item1;
                 c2 = coordinates[second].Item2;
 
+                string firstVal, secondVal;
+
+                bool isXFound = false;
+
                 if (r1 == r2)
                 {
-                    output_string += matrix[r1, Mod((c1 - 1), 5)];
-                    output_string += matrix[r2, Mod((c2 - 1), 5)];
+                    firstVal = matrix[r1, Mod((c1 - 1), 5)];
+                    secondVal = matrix[r2, Mod((c2 - 1), 5)];
+
+                    if (secondVal.Equals("X"))
+                    {
+                        isXFound = true;
+
+                    }
                 }
                 else if (c1 == c2)
                 {
-                    output_string += matrix[Mod((r1 - 1), 5), c1];
-                    output_string += matrix[Mod((r2 - 1), 5), c2];
+                    firstVal = matrix[Mod((r1 - 1), 5), c1];
+                    secondVal = matrix[Mod((r2 - 1), 5), c2];
+                    if (secondVal.Equals("X"))
+                    {
+
+                        isXFound = true;
+
+                    }
                 }
                 else
                 {
-                    output_string += matrix[r1, c2];
-                    output_string += matrix[r2, c1];
+                    firstVal = matrix[r1, c2];
+                    secondVal = matrix[r2, c1];
+                    if (secondVal.Equals("X"))
+                    {
+                        isXFound = true;
+
+                    }
+
                 }
+
+                output_string += firstVal;
+                output_string += secondVal;
             }
-            for (int i = 0; i < output_string.Length - 2; i++)
+
+
+            for (int i = 1; i < output_string.Length - 1;)
             {
-                if (output_string[i + 2] == output_string[i] && output_string[i + 1] == 'X')
+                if (output_string[i - 1].Equals(output_string[i + 1]) && output_string[i].Equals('X'))
                 {
-                    output_string = output_string.Remove(i + 1, 1);
+                    var x = output_string[i - 1];
+                    var y = output_string[i];
+                    var z = output_string[i + 1];
+
+                    output_string = output_string.Remove(i, 1);
+                    i--;
                 }
+                else
+                    i += 2;
             }
 
             if (output_string.EndsWith("X"))
@@ -328,7 +360,7 @@ namespace SecurityLibrary
 
             output_string = output_string.ToLower();
 
-            
+
             return output_string;
         }
 
@@ -337,10 +369,10 @@ namespace SecurityLibrary
         public string Decrypt(string cipherText, string key)
         {
             //throw new NotImplementedException();
-            return playfair_Decipher(key,cipherText);
+            return playfair_Decipher(key, cipherText);
         }
 
-        
+
 
         public string Encrypt(string plainText, string key)
         {
