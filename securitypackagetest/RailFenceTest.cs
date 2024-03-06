@@ -40,7 +40,7 @@ namespace SecurityPackageTest
 
         [TestMethod]
         public void RailFenceTestAnalysis1()
-        {
+         {
             RailFence algorithm = new RailFence();
             int key = algorithm.Analyse(mainPlain1, mainCipher);
             Assert.AreEqual(mainKey, key);
