@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,9 +9,112 @@ namespace SecurityLibrary
 {
     public class Columnar : ICryptographicTechnique<string, List<int>>
     {
+        int Rows = -1;
+        private void GetRows(string plainText,string cipherText,int currCipher,int parentPlainIndex = -1,int difference = -1)
+        {
+            int i = parentPlainIndex + 1;
+            if (parentPlainIndex == -1)
+                i = 0;
+            bool flag = false;
+            for(; i < plainText.Length; i++)
+            {
+                if (currCipher < cipherText.Length && plainText[i].Equals(cipherText[currCipher]))
+                {
+                    if (parentPlainIndex == -1)
+                    {
+                        flag = true;
+                        GetRows(plainText, cipherText, currCipher + 1, i);
+                        
+                    }
+                    else
+                    {   
+                        if(difference == -1 || difference == i - parentPlainIndex)
+                        {
+                            flag = true;
+                            GetRows(plainText, cipherText, currCipher + 1, i, i - parentPlainIndex);
+                           
+                        }
+                    }
+                }
+            }
+            if (!flag)
+            {
+                Rows = Math.Max(Rows,currCipher);
+            }
+            
+        }
+
+        private char[,] GetMatrix(string plainText,string cipherText,int Rows,int Cols)
+        {
+
+            int ctr = 0;
+            char[,] matrix = new char[Rows, Cols];
+            for (int i = 0; i < Rows; i++)
+            {
+                for (int j = 0; j < Cols; j++)
+                {
+                    if (plainText.Length <= ctr)
+                        break;
+                    matrix[i, j] = plainText[ctr++];
+                }
+            }
+            
+          
+            return matrix;
+        }
+
         public List<int> Analyse(string plainText, string cipherText)
         {
-            throw new NotImplementedException();
+            //#1 Get # of rows
+            //#2 build matrix
+            //#3 search for the start of the index
+            //#4 increment position each time
+            cipherText = cipherText.ToLower();
+            GetRows(plainText, cipherText, 0);
+            int Cols = (int)Math.Ceiling((double)plainText.Length / Rows * 1.0);
+
+            char[,] matrix = GetMatrix(plainText, cipherText, Rows, Cols);
+
+            if (cipherText.Length != Rows * Cols)
+            {
+                StringBuilder str = new StringBuilder();
+                int length = Rows * Cols - plainText.Length;
+                for (int i = 0; i < length; i++)
+                    str.Append('x');
+                cipherText = cipherText + str.ToString();
+            }
+
+            int[] arr = new int[Cols];
+            int ans = 1;
+            for (int cipherCtr = 0; cipherCtr < cipherText.Length; cipherCtr += Rows)
+            {
+                
+                for (int i = 0; i < Cols; i++)
+                {
+                    bool isRightCol = true;
+                    for (int j = 0; j < Rows; j++)
+                    {
+                        if (!matrix[j, i].Equals(cipherText[cipherCtr + j]))
+                        {
+                            isRightCol = false;
+                            break;
+                        }
+                    }
+                    if (isRightCol)
+                    {
+                        arr[i] = ans++;
+                        break;
+                    }
+                }
+                
+            }
+            
+            List<int> key = new List<int>();
+            for (int i = 0; i < Cols; i++)
+                key.Add(arr[i]);
+            
+
+            return key;
         }
 
         public string Decrypt(string cipherText, List<int> key)
