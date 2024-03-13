@@ -520,26 +520,60 @@ namespace SecurityLibrary
             return key;
         }
 
+
+        private List<int> ConvertStringToListInt(string text)
+        {
+            List<int> ascii = new List<int>();
+            foreach(char c in text)
+            {
+                ascii.Add(c - 'a');
+            }
+            return ascii;
+        }
+        private string ListIntToString(List<int> ascii)
+        {
+            StringBuilder text = new StringBuilder();
+            foreach(int i in ascii)
+            {
+                text.Append((char)(i + 'a')); 
+            }
+            return text.ToString();
+        }
+
         public string Encrypt(string plainText, string key)
         {
-            throw new NotImplementedException();
+            List<int> plainList = ConvertStringToListInt(plainText);
+            List<int> keyList = ConvertStringToListInt(key);
+            List<int> cipherList = Encrypt(plainList, keyList);
+            return ListIntToString(cipherList);
+            /*throw new NotImplementedException();*/
         }
 
         public string Decrypt(string cipherText, string key)
         {
-            throw new NotImplementedException();
+            List<int> cipherList = ConvertStringToListInt(cipherText);
+            List<int> keyList = ConvertStringToListInt(key);
+            List<int> plainList = Encrypt(cipherList, keyList);
+            return ListIntToString(plainList);
+            /*throw new NotImplementedException();*/
         }
 
         
 
         public string Analyse(string plainText, string cipherText)
         {
-            throw new NotImplementedException();
+            List<int> cipherList = ConvertStringToListInt(cipherText);
+            List<int> plainList = ConvertStringToListInt(plainText);
+            List<int> keyList = Analyse(plainList,cipherList);
+            return ListIntToString(keyList);
         }
 
         public string Analyse3By3Key(string plain3, string cipher3)
         {
-            throw new NotImplementedException();
+            List<int> cipherList = ConvertStringToListInt(cipher3);
+            List<int> plainList = ConvertStringToListInt(plain3);
+            List<int> keyList = Analyse(plainList, cipherList);
+            return ListIntToString(keyList);
         }
     }
 }
