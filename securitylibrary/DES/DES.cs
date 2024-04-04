@@ -321,16 +321,36 @@ namespace SecurityLibrary.DES
 
         public override string Decrypt(string cipherText, string key)
         {
-            throw new NotImplementedException();
+            key = key.Substring(2);
+            cipherText = cipherText.Substring(2);
+            string BinaryCipherText = HexaToBinary(cipherText);
+            GenerateSubkeys(key);
+            string PermutationCipherText = GetEquivalentPermutation(BinaryCipherText, IP);
+            string Left, Right;
+
+            Left = PermutationCipherText.Substring(0, PermutationCipherText.Length / 2);
+            Right = PermutationCipherText.Substring(PermutationCipherText.Length / 2, PermutationCipherText.Length / 2);
+
+            for (int i = 16; i >= 1; i--)
+            {
+                string PreviousR = Right;
+                Right = F(Right, Key[i]);
+                Right = XORTwoStrings(Right, Left);
+                Left = PreviousR;
+            }
+            string ReversedConcatenation = Right + Left;
+            string FinalPermutation = GetEquivalentPermutation(ReversedConcatenation, IPInverse); 
+
+            return "0x" + BinaryStringToHexa(FinalPermutation);
         }
 
         public override string Encrypt(string plainText, string key)
         {
             key = key.Substring(2);//remove the '0x' in hexa string
             plainText = plainText.Substring(2);
-            string BinarPlainText = HexaToBinary(plainText);
+            string BinaryPlainText = HexaToBinary(plainText);
             GenerateSubkeys(key);
-            string PermutationPlainText = GetEquivalentPermutation(BinarPlainText, IP);
+            string PermutationPlainText = GetEquivalentPermutation(BinaryPlainText, IP);
 
             string Left, Right;
             Left = PermutationPlainText.Substring(0, PermutationPlainText.Length / 2);

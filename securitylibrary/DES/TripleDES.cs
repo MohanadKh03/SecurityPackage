@@ -317,7 +317,9 @@ namespace SecurityLibrary.DES
         }
         public string Decrypt(string cipherText, List<string> key)
         {
-            throw new NotImplementedException();
+            DES des = new DES();
+            String FirstRoundPlain = des.Decrypt(cipherText, key[0]);
+            return FirstRoundPlain;
         }
 
         public string Encrypt(string plainText, List<string> key)
