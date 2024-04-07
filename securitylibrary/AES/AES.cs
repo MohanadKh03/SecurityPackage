@@ -11,6 +11,11 @@ namespace SecurityLibrary.AES
     /// </summary>
     public class AES : CryptographicTechnique
     {
+        enum Algorithm
+        {
+            ENCRYPT, DECRYPT
+        };
+
         static string[] RoundKey = new string[11];//each key 4 bytes from left to right .. each row 8 digits
         static string[] Word = new string[44];
         static string[] RoundConstant =
@@ -25,7 +30,13 @@ namespace SecurityLibrary.AES
             "01010203",
             "03010102",
         };
-
+        static string[] MixColsTableInverse =
+        {
+            "0E0B0D09",
+            "090E0B0D",
+            "0D090E0B",
+            "0B0D090E"
+        };
 
         static Dictionary<KeyValuePair<string, string>, string>
             ForwardHexaSBox = new Dictionary<KeyValuePair<string, string>, string>();
@@ -115,7 +126,7 @@ namespace SecurityLibrary.AES
                 char currJ = '0';
                 while (currJ != ('F' + 1))
                 {
-                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>(prefix.ToString() + currI.ToString(), prefix.ToString() + currJ.ToString());
+                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>(currI.ToString() + prefix.ToString(), prefix.ToString() + currJ.ToString());
                     string value = SBoxInverse[ctr].ToString("X").ToUpper();
                     if (value.Length != 2)
                     {
@@ -184,10 +195,15 @@ namespace SecurityLibrary.AES
             return shiftedString;
         }
 
-        private static string ShiftRowByByte(string Text, int ByteNumber)
+        private static string ShiftRowByByte(string Text, int ByteNumber, int ID)
         {
-            string shiftedString = Text.Substring(ByteNumber * 2);
-            for (int i = 0; i < ByteNumber * 2; i++)
+            int TotalSize;
+            if (ID == 0)
+                TotalSize = ByteNumber * 2;
+            else
+                TotalSize = Text.Length - ByteNumber * 2;
+            string shiftedString = Text.Substring(TotalSize);
+            for (int i = 0; i < TotalSize; i++)
             {
                 shiftedString += Text[i];
             }
@@ -347,18 +363,18 @@ namespace SecurityLibrary.AES
             return BinaryStringToHexa(BinaryOutput);
         }
 
-        static string GetSubByteValue(string Text)
+        static string GetSubByteValue(string Text, int ID)
         {
             string TotalSBoxValues = "";
             for (int i = 0; i < Text.Length; i += 2)
             {
                 string Cell = Text[i].ToString() + Text[i + 1].ToString();
-                TotalSBoxValues += GetSBoxValue(Cell, 0);
+                TotalSBoxValues += GetSBoxValue(Cell, ID);
             }
             return TotalSBoxValues;
         }
 
-        static string GetShiftRowsValue(string Text)
+        static string GetShiftRowsValue(string Text, int ID)
         {
             string[] RowString = new string[4];
             int ctr = 0;
@@ -370,7 +386,7 @@ namespace SecurityLibrary.AES
             }
             for (int i = 1; i <= 3; i++)
             {
-                RowString[i] = ShiftRowByByte(RowString[i], i);
+                RowString[i] = ShiftRowByByte(RowString[i], i, ID);
             }
             string Ans = "";
             int currCol = 0;
@@ -404,11 +420,18 @@ namespace SecurityLibrary.AES
             }
             else
             {
-                string MultiplyByTwoOutput = AESGaloisMultiply("02", TextByte);
-                string MultiplyByThreeOutput = BinaryStringToHexa(
-                     XORTwoStringsBinary(HexaToBinary(MultiplyByTwoOutput), HexaToBinary(TextByte))
-                 );
-                return MultiplyByThreeOutput;
+                int num = BinaryStringToInt(HexaToBinary(MixColsByte));
+                string ReturnedVal = "";
+                if (num / 2 < 10)
+                    ReturnedVal = AESGaloisMultiply("0" + (num / 2).ToString(), TextByte);
+                else
+                    ReturnedVal = AESGaloisMultiply((num / 2).ToString(), TextByte);
+                if (num % 2 == 0)
+                    return AESGaloisMultiply("02", ReturnedVal);
+                else
+                    return BinaryStringToHexa(
+                     XORTwoStringsBinary(HexaToBinary(AESGaloisMultiply("02", ReturnedVal)), HexaToBinary(TextByte))
+                    );
             }
 
         }
@@ -432,7 +455,7 @@ namespace SecurityLibrary.AES
             return Curr;
         }
 
-        static string GetMixColumnsValue(string Text)
+        static string GetMixColumnsValue(string Text, int ID)
         {
             string[] TextCols = new string[4];
             int ctr = 0;
@@ -447,7 +470,11 @@ namespace SecurityLibrary.AES
             {
                 for (int k = 0; k < 4; k++)
                 {
-                    Ans += GetAESGaloisMultiplicationHexa(MixColsTable[k], TextCols[j]);
+                    if (ID == 0)
+                        Ans += GetAESGaloisMultiplicationHexa(MixColsTable[k], TextCols[j]);
+                    else
+                        Ans += GetAESGaloisMultiplicationHexa(MixColsTableInverse[k], TextCols[j]);
+
                 }
             }
             return Ans;
@@ -456,7 +483,29 @@ namespace SecurityLibrary.AES
 
         public override string Decrypt(string cipherText, string key)
         {
-            throw new NotImplementedException();
+            if (key.StartsWith("0x"))
+                key = key.Substring(2);
+            if (cipherText.StartsWith("0x"))
+                cipherText = cipherText.Substring(2);
+            key = key.ToUpper();
+            cipherText = cipherText.ToUpper();
+            MakeRoundKeys(key);
+            string InitialPermutation = AddRoundKey(cipherText, RoundKey[10]);
+            string CurrStart = InitialPermutation;
+            for (int i = 9; i >= 1; i--)
+            {
+                string ShiftRowsOutput = GetShiftRowsValue(CurrStart, (int)Algorithm.DECRYPT);
+                string SubByteOutput = GetSubByteValue(ShiftRowsOutput, (int)Algorithm.DECRYPT);
+                string CurrentPermutation = AddRoundKey(SubByteOutput, RoundKey[i]);
+                string MixColsOutput = GetMixColumnsValue(CurrentPermutation, (int)Algorithm.DECRYPT);
+                if (MixColsOutput.Equals("991897a71e153b0873308408f1afdd0c".ToUpper()))
+                    Console.WriteLine("RIGHT");
+                CurrStart = MixColsOutput;
+            }
+            string FinalShiftRowsOutput = GetShiftRowsValue(CurrStart, (int)Algorithm.DECRYPT);
+            string FinalSubByteOutput = GetSubByteValue(FinalShiftRowsOutput, (int)Algorithm.DECRYPT);
+            string FinalPermutation = AddRoundKey(FinalSubByteOutput, RoundKey[0]);
+            return "0x" + FinalPermutation;
         }
 
         public override string Encrypt(string plainText, string key)
@@ -474,15 +523,15 @@ namespace SecurityLibrary.AES
             Console.WriteLine(InitialPermutation);
             for (int i = 1; i <= 9; i++)
             {
-                string SubByteOutput = GetSubByteValue(CurrStart);
+                string SubByteOutput = GetSubByteValue(CurrStart, (int)Algorithm.ENCRYPT);
                 Console.WriteLine(SubByteOutput);
-                string ShiftRowsOutput = GetShiftRowsValue(SubByteOutput);
-                string MixColsOutput = GetMixColumnsValue(ShiftRowsOutput);
+                string ShiftRowsOutput = GetShiftRowsValue(SubByteOutput, (int)Algorithm.ENCRYPT);
+                string MixColsOutput = GetMixColumnsValue(ShiftRowsOutput,(int)Algorithm.ENCRYPT);
                 string CurrentPermutation = AddRoundKey(MixColsOutput, RoundKey[i]);
                 CurrStart = CurrentPermutation;
             }
-            string FinalSubByteOutput = GetSubByteValue(CurrStart);
-            string FinalShiftRowsOutput = GetShiftRowsValue(FinalSubByteOutput);
+            string FinalSubByteOutput = GetSubByteValue(CurrStart, (int)Algorithm.ENCRYPT);
+            string FinalShiftRowsOutput = GetShiftRowsValue(FinalSubByteOutput, (int)Algorithm.ENCRYPT);
             string FinalPermutation = AddRoundKey(FinalShiftRowsOutput, RoundKey[10]);
             return "0x" + FinalPermutation;
         }
