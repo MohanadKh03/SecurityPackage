@@ -39,7 +39,7 @@ namespace SecurityPackageTest
         public void RC4TestDec2()
         {
             RC4 algorithm = new RC4();
-            string cipher = algorithm.Encrypt("0xcfed4475", "0x74657374");
+            string cipher = algorithm.Decrypt("0xcfed4475", "0x74657374");
             Assert.IsTrue(cipher.Equals("0x61626364", StringComparison.InvariantCultureIgnoreCase));
         }
 
