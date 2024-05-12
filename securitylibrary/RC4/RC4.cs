@@ -111,7 +111,6 @@ namespace SecurityLibrary.RC4
                 bytes[i / 2] = Convert.ToByte(hexString.Substring(i, 2), 16);
             }
 
-            // Convert the byte array to a string using ISO-8859-1 encoding
             string text = Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
 
             return text;
