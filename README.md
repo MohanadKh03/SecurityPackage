@@ -1,4 +1,11 @@
-## NOTE: This template can be run only using Visual Studio (for now)
+## NOTE: This template can be used only using Visual Studio (for now)
+---
+### This is an implementation of some of the most popular cryptography algorithms using C# 
+
+| Target Framework    |
+|---------------------|
+| .NET Framework 4.8 |
+
 # Steps to run: 
 - Go to ``Test`` tab
   
